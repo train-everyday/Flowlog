@@ -1,0 +1,2545 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowLog</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --w: #e8f4f8;
+  --w2: #c5e3ee;
+  --wdark: #4a9bb5;
+  --wdeep: #1a6e8a;
+  --y: #f5c842;
+  --ydark: #c49a0a;
+  --ylight: #fde88a;
+  --bg: #06111a;
+  --bg2: #091824;
+  --glass: rgba(255,255,255,0.04);
+  --glass2: rgba(255,255,255,0.07);
+  --glass3: rgba(255,255,255,0.11);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f7fa;
+  --text2: #8bafc0;
+  --text3: #4d7a90;
+  --r: 20px;
+  --shadow-w: 0 0 60px rgba(74,155,181,0.25);
+  --shadow-y: 0 0 60px rgba(245,200,66,0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+font-family: ‘Outfit’, sans-serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+overflow-x: hidden;
+position: relative;
+}
+
+/* ── BACKGROUND ─────────────────────────────── */
+.bg-orbs {
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 0;
+overflow: hidden;
+}
+.orb {
+position: absolute;
+border-radius: 50%;
+filter: blur(80px);
+animation: drift 20s ease-in-out infinite alternate;
+}
+.orb1 {
+width: 500px; height: 500px;
+background: radial-gradient(circle, rgba(30,100,140,0.35) 0%, transparent 70%);
+top: -150px; left: -100px;
+animation-duration: 25s;
+}
+.orb2 {
+width: 400px; height: 400px;
+background: radial-gradient(circle, rgba(180,140,10,0.18) 0%, transparent 70%);
+bottom: -100px; right: -80px;
+animation-duration: 30s;
+animation-delay: -10s;
+}
+.orb3 {
+width: 300px; height: 300px;
+background: radial-gradient(circle, rgba(74,155,181,0.12) 0%, transparent 70%);
+top: 50%; left: 50%;
+transform: translate(-50%, -50%);
+animation-duration: 18s;
+animation-delay: -5s;
+}
+@keyframes drift {
+0% { transform: translate(0, 0) scale(1); }
+100% { transform: translate(40px, 30px) scale(1.08); }
+}
+
+/* noise grain overlay */
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.03’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 1;
+opacity: 0.4;
+}
+
+/* ── LAYOUT ─────────────────────────────────── */
+.app {
+position: relative;
+z-index: 2;
+max-width: 860px;
+margin: 0 auto;
+padding: 28px 18px 60px;
+}
+
+/* ── HEADER ─────────────────────────────────── */
+header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 36px;
+animation: fadeUp 0.6s ease both;
+}
+.logo {
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
+.logo h1 {
+font-family: ‘Playfair Display’, serif;
+font-size: 2rem;
+font-weight: 700;
+letter-spacing: -0.02em;
+background: linear-gradient(135deg, var(–w), #fff, var(–w2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+line-height: 1;
+}
+.logo p {
+font-size: 0.68rem;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+color: var(–text3);
+font-weight: 400;
+}
+.header-right {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+/* ── DATE NAV ───────────────────────────────── */
+.date-pill {
+display: flex;
+align-items: center;
+gap: 8px;
+background: var(–glass2);
+border: 1px solid var(–border);
+border-radius: 99px;
+padding: 8px 14px;
+backdrop-filter: blur(12px);
+}
+.date-pill button {
+background: none; border: none;
+color: var(–text3); cursor: pointer;
+font-size: 1rem; line-height: 1;
+transition: color 0.2s;
+width: 20px; height: 20px;
+display: flex; align-items: center; justify-content: center;
+}
+.date-pill button:hover { color: var(–w); }
+.date-pill span {
+font-size: 0.8rem;
+font-weight: 500;
+color: var(–text);
+min-width: 130px;
+text-align: center;
+}
+
+/* settings btn */
+.settings-btn {
+width: 40px; height: 40px;
+border-radius: 50%;
+background: var(–glass2);
+border: 1px solid var(–border);
+color: var(–text2);
+font-size: 1.1rem;
+cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.2s;
+backdrop-filter: blur(12px);
+}
+.settings-btn:hover { background: var(–glass3); border-color: var(–border2); color: var(–text); }
+
+/* ── SETTINGS MODAL ─────────────────────────── */
+.modal-overlay {
+position: fixed; inset: 0;
+background: rgba(6,17,26,0.8);
+backdrop-filter: blur(10px);
+z-index: 100;
+display: flex; align-items: center; justify-content: center;
+opacity: 0; pointer-events: none;
+transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+background: #0d2030;
+border: 1px solid var(–border2);
+border-radius: 24px;
+padding: 32px;
+width: min(420px, calc(100vw - 32px));
+transform: translateY(20px) scale(0.97);
+transition: transform 0.3s;
+box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+}
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+.modal h2 {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.4rem;
+margin-bottom: 24px;
+color: var(–text);
+}
+.setting-row {
+margin-bottom: 24px;
+}
+.setting-label {
+font-size: 0.72rem;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+color: var(–text3);
+margin-bottom: 10px;
+font-weight: 500;
+}
+.setting-desc {
+font-size: 0.72rem;
+color: var(–text3);
+margin-top: 6px;
+line-height: 1.5;
+}
+.goal-selector {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 8px;
+}
+.goal-opt {
+padding: 10px 6px;
+border-radius: 12px;
+border: 1.5px solid var(–border);
+background: var(–glass);
+cursor: pointer;
+text-align: center;
+transition: all 0.2s;
+color: var(–text2);
+font-size: 0.75rem;
+font-weight: 500;
+}
+.goal-opt .g-drinks { font-size: 1.1rem; font-weight: 700; color: var(–text); display: block; }
+.goal-opt:hover { border-color: var(–wdark); color: var(–w); }
+.goal-opt.selected { border-color: var(–wdark); background: rgba(74,155,181,0.15); color: var(–w); }
+.goal-opt.selected .g-drinks { color: var(–w); }
+
+.custom-goal-row {
+display: flex;
+align-items: center;
+gap: 10px;
+margin-top: 12px;
+}
+.custom-goal-row input {
+flex: 1;
+background: var(–glass);
+border: 1.5px solid var(–border);
+border-radius: 10px;
+color: var(–text);
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.9rem;
+padding: 10px 14px;
+outline: none;
+transition: border-color 0.2s;
+}
+.custom-goal-row input:focus { border-color: var(–wdark); }
+.custom-goal-row input::placeholder { color: var(–text3); }
+
+.oz-size-row {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 8px;
+}
+.oz-opt {
+padding: 10px 6px;
+border-radius: 12px;
+border: 1.5px solid var(–border);
+background: var(–glass);
+cursor: pointer;
+text-align: center;
+transition: all 0.2s;
+color: var(–text2);
+font-size: 0.8rem;
+font-weight: 600;
+}
+.oz-opt:hover { border-color: var(–wdark); }
+.oz-opt.selected { border-color: var(–wdark); background: rgba(74,155,181,0.15); color: var(–w); }
+
+.modal-btns {
+display: flex;
+gap: 10px;
+margin-top: 28px;
+}
+.btn-save {
+flex: 1;
+padding: 13px;
+border-radius: 12px;
+border: none;
+background: linear-gradient(135deg, var(–wdeep), var(–wdark));
+color: white;
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.85rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+}
+.btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-cancel {
+padding: 13px 20px;
+border-radius: 12px;
+border: 1px solid var(–border);
+background: transparent;
+color: var(–text2);
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.85rem;
+cursor: pointer;
+transition: all 0.2s;
+}
+.btn-cancel:hover { border-color: var(–border2); color: var(–text); }
+
+/* ── CIRCULAR PROGRESS ──────────────────────── */
+.ring-section {
+display: flex;
+justify-content: center;
+margin-bottom: 28px;
+animation: fadeUp 0.6s 0.1s ease both;
+}
+.ring-wrap {
+position: relative;
+width: 180px; height: 180px;
+}
+.ring-wrap svg {
+transform: rotate(-90deg);
+width: 100%; height: 100%;
+}
+.ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; }
+.ring-fill {
+fill: none;
+stroke-width: 10;
+stroke-linecap: round;
+stroke: url(#ringGrad);
+stroke-dasharray: 502;
+stroke-dashoffset: 502;
+transition: stroke-dashoffset 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+.ring-center {
+position: absolute;
+top: 50%; left: 50%;
+transform: translate(-50%, -50%);
+text-align: center;
+pointer-events: none;
+}
+.ring-pct {
+font-family: ‘Playfair Display’, serif;
+font-size: 2.4rem;
+font-weight: 700;
+color: var(–text);
+line-height: 1;
+display: block;
+}
+.ring-sub {
+font-size: 0.62rem;
+color: var(–text3);
+letter-spacing: 0.1em;
+text-transform: uppercase;
+margin-top: 4px;
+display: block;
+}
+.ring-oz {
+font-size: 0.78rem;
+color: var(–w2);
+font-weight: 500;
+margin-top: 2px;
+display: block;
+}
+
+/* ── STATS ROW ──────────────────────────────── */
+.stats-row {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 12px;
+margin-bottom: 24px;
+animation: fadeUp 0.6s 0.15s ease both;
+}
+.stat {
+background: var(–glass);
+border: 1px solid var(–border);
+border-radius: 16px;
+padding: 16px 12px;
+text-align: center;
+backdrop-filter: blur(8px);
+transition: border-color 0.3s, background 0.3s;
+}
+.stat:hover { background: var(–glass2); border-color: var(–border2); }
+.stat-n {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.7rem;
+line-height: 1;
+font-weight: 700;
+}
+.stat-n.blue { color: var(–w); }
+.stat-n.gold { color: var(–y); }
+.stat-n.green { color: #7de8b0; }
+.stat-n.muted { color: var(–text2); }
+.stat-lbl {
+font-size: 0.6rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–text3);
+margin-top: 5px;
+font-weight: 400;
+}
+
+/* ── MAIN PANELS ────────────────────────────── */
+.panels {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 16px;
+margin-bottom: 20px;
+animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.panel {
+background: var(–glass);
+border: 1px solid var(–border);
+border-radius: 24px;
+padding: 24px;
+backdrop-filter: blur(16px);
+position: relative;
+overflow: hidden;
+transition: border-color 0.3s;
+}
+.panel::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0; height: 1px;
+border-radius: 24px 24px 0 0;
+}
+.drink-panel::before { background: linear-gradient(90deg, transparent, rgba(74,155,181,0.6), transparent); }
+.pee-panel::before { background: linear-gradient(90deg, transparent, rgba(245,200,66,0.5), transparent); }
+
+.panel:hover { border-color: var(–border2); }
+
+.panel-glow {
+position: absolute;
+top: -60px; right: -60px;
+width: 160px; height: 160px;
+border-radius: 50%;
+pointer-events: none;
+opacity: 0.12;
+filter: blur(40px);
+}
+.drink-panel .panel-glow { background: var(–wdark); }
+.pee-panel .panel-glow { background: var(–y); }
+
+.panel-header {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-bottom: 20px;
+}
+.panel-icon {
+width: 34px; height: 34px;
+border-radius: 10px;
+display: flex; align-items: center; justify-content: center;
+font-size: 1rem;
+}
+.drink-panel .panel-icon { background: rgba(74,155,181,0.15); }
+.pee-panel .panel-icon { background: rgba(245,200,66,0.12); }
+.panel-title-text {
+font-size: 0.7rem;
+font-weight: 600;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+.drink-panel .panel-title-text { color: var(–w2); }
+.pee-panel .panel-title-text { color: var(–ylight); }
+
+/* big log button */
+.log-btn {
+width: 100%;
+padding: 20px 16px;
+border: none;
+border-radius: 16px;
+cursor: pointer;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 5px;
+position: relative;
+overflow: hidden;
+transition: transform 0.2s, box-shadow 0.2s;
+margin-bottom: 16px;
+}
+.log-btn:active { transform: scale(0.97); }
+.log-btn .btn-ripple {
+position: absolute;
+inset: 0;
+background: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+opacity: 0;
+transition: opacity 0.2s;
+}
+.log-btn:hover .btn-ripple { opacity: 1; }
+
+.drink-btn {
+background: linear-gradient(145deg, #1a6e8a, #2a95b5, #3ab0d5);
+box-shadow: 0 8px 30px rgba(42,149,181,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.drink-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(42,149,181,0.45), inset 0 1px 0 rgba(255,255,255,0.15); }
+
+.pee-btn {
+background: linear-gradient(145deg, #9a7a00, #c49a0a, #e8b80f);
+box-shadow: 0 8px 30px rgba(196,154,10,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.pee-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(196,154,10,0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
+
+.btn-icon { font-size: 2rem; line-height: 1; }
+.btn-label {
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.95rem;
+font-weight: 700;
+color: white;
+letter-spacing: 0.01em;
+}
+.pee-btn .btn-label { color: #1a1000; }
+.btn-sub {
+font-size: 0.65rem;
+color: rgba(255,255,255,0.7);
+font-weight: 400;
+}
+.pee-btn .btn-sub { color: rgba(30,20,0,0.6); }
+
+/* pee type selector */
+.pee-types {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 6px;
+margin-bottom: 14px;
+}
+.pee-type {
+padding: 8px 4px;
+border-radius: 10px;
+border: 1px solid var(–border);
+background: transparent;
+cursor: pointer;
+text-align: center;
+transition: all 0.18s;
+color: var(–text3);
+font-size: 0.6rem;
+font-weight: 500;
+letter-spacing: 0.04em;
+font-family: ‘Outfit’, sans-serif;
+}
+.pee-type span { display: block; font-size: 1.05rem; margin-bottom: 2px; }
+.pee-type:hover { border-color: rgba(245,200,66,0.4); color: var(–ylight); background: rgba(245,200,66,0.05); }
+.pee-type.sel { border-color: rgba(245,200,66,0.6); background: rgba(245,200,66,0.1); color: var(–ylight); }
+
+/* log list */
+.log-list {
+max-height: 170px;
+overflow-y: auto;
+scrollbar-width: thin;
+scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.log-entry {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 7px 0;
+border-bottom: 1px solid rgba(255,255,255,0.04);
+animation: slideIn 0.25s ease both;
+}
+@keyframes slideIn {
+from { opacity: 0; transform: translateX(-8px); }
+to { opacity: 1; transform: translateX(0); }
+}
+.log-entry:last-child { border-bottom: none; }
+.e-dot {
+width: 6px; height: 6px;
+border-radius: 50%; flex-shrink: 0;
+}
+.e-time {
+font-size: 0.68rem;
+color: var(–text3);
+font-weight: 400;
+min-width: 48px;
+}
+.e-detail {
+flex: 1;
+font-size: 0.72rem;
+color: var(–text2);
+}
+.e-del {
+background: none; border: none;
+color: var(–text3); cursor: pointer;
+font-size: 0.75rem;
+padding: 2px 6px;
+border-radius: 6px;
+transition: all 0.15s;
+opacity: 0;
+}
+.log-entry:hover .e-del { opacity: 1; }
+.e-del:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+
+.empty-msg {
+text-align: center;
+padding: 18px 0;
+color: var(–text3);
+font-size: 0.72rem;
+}
+.empty-msg .ei { font-size: 1.6rem; display: block; opacity: 0.3; margin-bottom: 5px; }
+
+/* ── BALANCE BAR ────────────────────────────── */
+.balance-card {
+background: var(–glass);
+border: 1px solid var(–border);
+border-radius: 20px;
+padding: 20px 22px;
+backdrop-filter: blur(12px);
+margin-bottom: 20px;
+animation: fadeUp 0.6s 0.25s ease both;
+}
+.balance-top {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 12px;
+}
+.balance-lbl {
+font-size: 0.65rem;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+color: var(–text3);
+font-weight: 500;
+}
+.balance-ratio {
+font-family: ‘Playfair Display’, serif;
+font-size: 1rem;
+color: var(–text);
+}
+.balance-track {
+height: 8px;
+background: rgba(255,255,255,0.06);
+border-radius: 99px;
+overflow: hidden;
+position: relative;
+}
+.balance-fill {
+height: 100%;
+border-radius: 99px;
+transition: width 0.7s cubic-bezier(0.34,1.56,0.64,1), background 0.5s;
+}
+.balance-markers {
+display: flex;
+justify-content: space-between;
+margin-top: 6px;
+}
+.balance-markers span {
+font-size: 0.58rem;
+color: var(–text3);
+}
+
+/* ── BOTTOM TABS ────────────────────────────── */
+.section-lower {
+animation: fadeUp 0.6s 0.3s ease both;
+}
+.tabs {
+display: flex;
+gap: 4px;
+background: var(–glass);
+border: 1px solid var(–border);
+border-radius: 14px;
+padding: 4px;
+margin-bottom: 16px;
+backdrop-filter: blur(8px);
+}
+.tab {
+flex: 1;
+padding: 9px 8px;
+border: none;
+border-radius: 11px;
+background: transparent;
+color: var(–text3);
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.72rem;
+font-weight: 600;
+cursor: pointer;
+letter-spacing: 0.04em;
+transition: all 0.2s;
+}
+.tab.active { background: rgba(255,255,255,0.09); color: var(–text); }
+
+/* cards */
+.card {
+background: var(–glass);
+border: 1px solid var(–border);
+border-radius: 20px;
+padding: 24px;
+backdrop-filter: blur(12px);
+}
+.card-title {
+font-size: 0.65rem;
+text-transform: uppercase;
+letter-spacing: 0.14em;
+color: var(–text3);
+font-weight: 600;
+margin-bottom: 20px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.card-title::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–border);
+}
+
+/* ── CHART ──────────────────────────────────── */
+.week-chart {
+display: flex;
+gap: 8px;
+align-items: flex-end;
+height: 130px;
+margin-bottom: 8px;
+}
+.chart-day {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 3px;
+height: 100%;
+justify-content: flex-end;
+}
+.bars {
+display: flex;
+gap: 2px;
+align-items: flex-end;
+width: 100%;
+justify-content: center;
+flex: 1;
+}
+.bar {
+border-radius: 4px 4px 0 0;
+min-height: 3px;
+transition: height 0.5s cubic-bezier(0.34,1.56,0.64,1);
+width: 42%;
+}
+.bar-d { background: linear-gradient(180deg, var(–wdark), var(–wdeep)); }
+.bar-p { background: linear-gradient(180deg, var(–y), var(–ydark)); }
+.chart-day.today .bar-d { background: linear-gradient(180deg, var(–w), var(–wdark)); }
+.chart-day.today .bar-p { background: linear-gradient(180deg, var(–ylight), var(–y)); }
+.chart-lbl {
+font-size: 0.6rem;
+color: var(–text3);
+font-weight: 400;
+}
+.chart-day.today .chart-lbl { color: var(–text2); font-weight: 600; }
+.chart-day { gap: 4px; }
+.noc-dot { margin-bottom: 2px; flex-shrink: 0; }
+.legend {
+display: flex;
+gap: 16px;
+justify-content: center;
+margin-top: 10px;
+}
+.leg-item {
+display: flex;
+align-items: center;
+gap: 5px;
+font-size: 0.63rem;
+color: var(–text3);
+}
+.leg-dot {
+width: 10px; height: 6px;
+border-radius: 2px;
+}
+
+/* ── INSIGHTS ───────────────────────────────── */
+.insights-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+gap: 12px;
+}
+.insight {
+background: rgba(255,255,255,0.03);
+border-radius: 14px;
+padding: 16px;
+border-left: 2.5px solid transparent;
+transition: background 0.2s;
+}
+.insight:hover { background: rgba(255,255,255,0.05); }
+.insight.good { border-left-color: #7de8b0; }
+.insight.warn { border-left-color: var(–y); }
+.insight.info { border-left-color: var(–w2); }
+.insight.bad { border-left-color: #f87171; }
+.insight-ico { font-size: 1.2rem; margin-bottom: 8px; }
+.insight-name {
+font-size: 0.75rem;
+font-weight: 700;
+color: var(–text);
+margin-bottom: 4px;
+}
+.insight-desc {
+font-size: 0.67rem;
+color: var(–text2);
+line-height: 1.55;
+}
+
+/* ── REPORT ─────────────────────────────────── */
+.report-actions {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+margin-bottom: 16px;
+}
+.rbtn {
+padding: 10px 18px;
+border-radius: 12px;
+border: 1px solid var(–border);
+background: var(–glass2);
+color: var(–text2);
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.75rem;
+font-weight: 600;
+cursor: pointer;
+letter-spacing: 0.04em;
+transition: all 0.2s;
+}
+.rbtn:hover { border-color: var(–border2); color: var(–text); }
+.rbtn.primary {
+background: linear-gradient(135deg, var(–wdeep), var(–wdark));
+border-color: transparent;
+color: white;
+}
+.rbtn.primary:hover { opacity: 0.85; transform: translateY(-1px); }
+.report-pre {
+background: rgba(0,0,0,0.3);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 18px;
+font-family: ‘Outfit’, monospace;
+font-size: 0.7rem;
+color: var(–text2);
+line-height: 1.85;
+white-space: pre-wrap;
+max-height: 280px;
+overflow-y: auto;
+display: none;
+scrollbar-width: thin;
+scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.report-pre.show { display: block; animation: fadeUp 0.3s ease; }
+
+/* ── TIME LOG MODAL ─────────────────────────── */
+.time-modal {
+background: #0d2030;
+border: 1px solid var(–border2);
+border-radius: 24px;
+padding: 28px;
+width: min(360px, calc(100vw - 32px));
+transform: translateY(20px) scale(0.97);
+transition: transform 0.3s;
+box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+}
+.modal-overlay.open .time-modal { transform: translateY(0) scale(1); }
+.time-modal h2 {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.2rem;
+margin-bottom: 6px;
+color: var(–text);
+}
+.time-modal .modal-sub {
+font-size: 0.72rem;
+color: var(–text3);
+margin-bottom: 22px;
+}
+.time-input-wrap {
+display: flex;
+flex-direction: column;
+gap: 14px;
+margin-bottom: 22px;
+}
+.time-field {
+display: flex;
+flex-direction: column;
+gap: 6px;
+}
+.time-field label {
+font-size: 0.65rem;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+color: var(–text3);
+font-weight: 500;
+}
+.time-field input {
+background: rgba(255,255,255,0.05);
+border: 1px solid var(–border2);
+border-radius: 12px;
+color: var(–text);
+font-family: ‘Outfit’, sans-serif;
+font-size: 1.1rem;
+font-weight: 500;
+padding: 12px 16px;
+outline: none;
+transition: border-color 0.2s, box-shadow 0.2s;
+width: 100%;
+}
+.time-field input:focus {
+border-color: var(–wdark);
+box-shadow: 0 0 0 3px rgba(74,155,181,0.15);
+}
+.time-field input[type=“time”]::-webkit-calendar-picker-indicator {
+filter: invert(0.6);
+cursor: pointer;
+}
+.quick-times {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+margin-top: 4px;
+}
+.qt-btn {
+padding: 5px 12px;
+border-radius: 99px;
+border: 1px solid var(–border);
+background: var(–glass);
+color: var(–text2);
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.7rem;
+cursor: pointer;
+transition: all 0.15s;
+}
+.qt-btn:hover { border-color: var(–wdark); color: var(–w); background: rgba(74,155,181,0.1); }
+.time-modal-btns {
+display: flex;
+gap: 10px;
+}
+
+/* edit time inline */
+.e-time-wrap {
+position: relative;
+display: flex;
+align-items: center;
+gap: 4px;
+min-width: 52px;
+}
+.e-time-edit {
+background: none; border: none;
+color: var(–text3);
+cursor: pointer;
+font-size: 0.7rem;
+padding: 1px 3px;
+border-radius: 4px;
+opacity: 0;
+transition: opacity 0.15s;
+line-height: 1;
+}
+.log-entry:hover .e-time-edit { opacity: 1; }
+.e-time-edit:hover { color: var(–w); background: rgba(74,155,181,0.15); }
+
+/* ── TOAST ──────────────────────────────────── */
+.toast {
+position: fixed;
+bottom: 28px; left: 50%;
+transform: translateX(-50%) translateY(16px);
+background: rgba(13,32,48,0.95);
+border: 1px solid var(–border2);
+color: var(–text);
+padding: 10px 22px;
+border-radius: 99px;
+font-size: 0.78rem;
+font-weight: 500;
+opacity: 0;
+transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+pointer-events: none;
+z-index: 200;
+backdrop-filter: blur(16px);
+white-space: nowrap;
+box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── ANIMATIONS ─────────────────────────────── */
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media (max-width: 580px) {
+.panels { grid-template-columns: 1fr; }
+.stats-row { grid-template-columns: repeat(2, 1fr); }
+.ring-wrap { width: 150px; height: 150px; }
+.ring-pct { font-size: 2rem; }
+header { flex-wrap: wrap; gap: 12px; }
+.goal-selector { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ── DRINK TYPE SELECTOR ────────────────────── */
+.drink-type-row {
+display: flex;
+gap: 6px;
+margin-bottom: 12px;
+flex-wrap: wrap;
+}
+.dtype-btn {
+padding: 5px 12px;
+border-radius: 99px;
+border: 1px solid var(–border);
+background: transparent;
+color: var(–text3);
+font-family: ‘Outfit’, sans-serif;
+font-size: 0.68rem;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.18s;
+}
+.dtype-btn:hover { border-color: var(–wdark); color: var(–w2); }
+.dtype-btn.sel { border-color: var(–wdark); background: rgba(74,155,181,0.15); color: var(–w); }
+
+/* ── CUTOFF WARNING BANNER ──────────────────── */
+.cutoff-banner {
+display: none;
+align-items: center;
+gap: 10px;
+background: rgba(245,158,11,0.1);
+border: 1px solid rgba(245,158,11,0.35);
+border-radius: 12px;
+padding: 10px 14px;
+margin-bottom: 12px;
+animation: pulseAmber 3s ease-in-out infinite;
+}
+.cutoff-banner.show { display: flex; }
+@keyframes pulseAmber {
+0%, 100% { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.08); }
+50% { border-color: rgba(245,158,11,0.6); background: rgba(245,158,11,0.14); }
+}
+.cutoff-banner-icon { font-size: 1.1rem; flex-shrink: 0; }
+.cutoff-banner-text { font-size: 0.72rem; color: var(–ylight); line-height: 1.4; }
+.cutoff-banner-text strong { display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 1px; }
+
+/* drink panel past cutoff glow */
+.drink-panel.past-cutoff { border-color: rgba(245,158,11,0.25); }
+.drink-panel.past-cutoff .panel-glow { background: rgba(200,140,0,0.5); }
+
+/* ── MORNING CHECK-IN CARD ──────────────────── */
+.checkin-card {
+background: linear-gradient(135deg, rgba(30,60,90,0.6), rgba(20,40,70,0.4));
+border: 1px solid rgba(74,155,181,0.3);
+border-radius: 20px;
+padding: 20px 22px;
+margin-bottom: 20px;
+position: relative;
+overflow: hidden;
+animation: fadeUp 0.5s ease both;
+}
+.checkin-card::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(74,155,181,0.5), transparent);
+}
+.checkin-card-top {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+margin-bottom: 14px;
+}
+.checkin-title {
+font-family: ‘Playfair Display’, serif;
+font-size: 1rem;
+color: var(–text);
+line-height: 1.2;
+}
+.checkin-sub {
+font-size: 0.68rem;
+color: var(–text3);
+margin-top: 3px;
+}
+.checkin-dismiss {
+background: none; border: none;
+color: var(–text3); cursor: pointer;
+font-size: 1rem; padding: 2px 6px;
+border-radius: 6px;
+transition: all 0.15s;
+flex-shrink: 0;
+}
+.checkin-dismiss:hover { color: var(–text2); background: var(–glass2); }
+.checkin-btns {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 8px;
+}
+.checkin-btn {
+padding: 12px 8px;
+border-radius: 14px;
+border: 1px solid var(–border);
+background: var(–glass);
+cursor: pointer;
+text-align: center;
+transition: all 0.2s;
+font-family: ‘Outfit’, sans-serif;
+}
+.checkin-btn:hover { background: var(–glass2); border-color: var(–border2); transform: translateY(-2px); }
+.checkin-btn .cb-icon { font-size: 1.4rem; display: block; margin-bottom: 5px; }
+.checkin-btn .cb-label { font-size: 0.68rem; color: var(–text2); font-weight: 500; line-height: 1.2; }
+.checkin-btn.good:hover { border-color: #7de8b0; background: rgba(125,232,176,0.08); }
+.checkin-btn.once:hover { border-color: var(–ylight); background: rgba(253,232,138,0.08); }
+.checkin-btn.multi:hover { border-color: #f87171; background: rgba(248,113,113,0.08); }
+
+/* ── BEDTIME SETTING ────────────────────────── */
+.bedtime-row {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.bedtime-input {
+flex: 1;
+background: rgba(255,255,255,0.05);
+border: 1.5px solid var(–border2);
+border-radius: 12px;
+color: var(–text);
+font-family: ‘Outfit’, sans-serif;
+font-size: 1rem;
+font-weight: 500;
+padding: 11px 14px;
+outline: none;
+transition: border-color 0.2s;
+}
+.bedtime-input:focus { border-color: var(–wdark); }
+.bedtime-input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+.cutoff-preview {
+font-size: 0.72rem;
+color: var(–text3);
+margin-top: 7px;
+}
+.cutoff-preview span { color: var(–ylight); font-weight: 600; }
+
+/* ── NOCTURIA TRACKER IN INSIGHTS ───────────── */
+.nocturia-row {
+display: flex;
+gap: 6px;
+flex-wrap: wrap;
+margin-top: 10px;
+}
+.noc-dot {
+width: 28px; height: 28px;
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 0.65rem;
+font-weight: 700;
+border: 1px solid var(–border);
+background: var(–glass);
+color: var(–text3);
+position: relative;
+}
+.noc-dot.good { background: rgba(125,232,176,0.15); border-color: #7de8b0; color: #7de8b0; }
+.noc-dot.once { background: rgba(245,200,66,0.12); border-color: var(–y); color: var(–ylight); }
+.noc-dot.multi { background: rgba(248,113,113,0.12); border-color: #f87171; color: #f87171; }
+.noc-dot.none { opacity: 0.3; }
+
+/* checkin time input */
+.checkin-card .time-field label { color: var(–text3); }
+.checkin-card .time-field input {
+background: rgba(255,255,255,0.06);
+border: 1.5px solid var(–border2);
+border-radius: 12px;
+color: var(–text);
+font-family: ‘Outfit’, sans-serif;
+font-size: 1.1rem;
+font-weight: 500;
+padding: 12px 16px;
+outline: none;
+width: 100%;
+transition: border-color 0.2s;
+}
+.checkin-card .time-field input:focus { border-color: var(–wdark); }
+.checkin-card .time-field input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+
+/* modal scrollable on small screens */
+.modal { max-height: 90vh; overflow-y: auto; }
+
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<!-- Settings Modal -->
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeSettingsOnBg(event)">
+  <div class="modal">
+    <h2>Settings</h2>
+
+```
+<div class="setting-row">
+  <div class="setting-label">Daily Drink Goal</div>
+  <div class="goal-selector" id="goalSelector">
+    <button class="goal-opt" data-val="6" onclick="selectGoal(6,this)">
+      <span class="g-drinks">6</span>72 oz
+    </button>
+    <button class="goal-opt" data-val="8" onclick="selectGoal(8,this)">
+      <span class="g-drinks">8</span>96 oz
+    </button>
+    <button class="goal-opt" data-val="10" onclick="selectGoal(10,this)">
+      <span class="g-drinks">10</span>120 oz
+    </button>
+    <button class="goal-opt" data-val="12" onclick="selectGoal(12,this)">
+      <span class="g-drinks">12</span>144 oz
+    </button>
+  </div>
+  <div class="custom-goal-row">
+    <input type="number" id="customGoalInput" placeholder="Custom (e.g. 9)" min="1" max="30">
+    <button class="rbtn" onclick="applyCustomGoal()">Set</button>
+  </div>
+  <div class="setting-desc" id="goalDesc">Goal: <strong id="goalDescVal">—</strong></div>
+</div>
+
+<div class="setting-row">
+  <div class="setting-label">Drink Size (oz per serving)</div>
+  <div class="oz-size-row">
+    <button class="oz-opt" data-val="8" onclick="selectOz(8,this)">8 oz</button>
+    <button class="oz-opt" data-val="12" onclick="selectOz(12,this)">12 oz</button>
+    <button class="oz-opt" data-val="16" onclick="selectOz(16,this)">16 oz</button>
+    <button class="oz-opt" data-val="20" onclick="selectOz(20,this)">20 oz</button>
+  </div>
+</div>
+
+
+  <div class="setting-row">
+    <div class="setting-label">Bedtime</div>
+    <div class="bedtime-row">
+      <input type="time" class="bedtime-input" id="bedtimeInput" value="21:30" oninput="updateCutoffPreview()">
+    </div>
+    <div class="cutoff-preview">Fluid cutoff: <span id="cutoffPreview">6:30 PM</span> (3 hrs before bed)</div>
+  </div>
+
+<div class="modal-btns">
+  <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+  <button class="btn-save" onclick="saveSettings()">Save Changes</button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- Time Log Modal -->
+
+<div class="modal-overlay" id="timeModalOverlay" onclick="closeTimeModalOnBg(event)">
+  <div class="time-modal">
+    <h2 id="timeModalTitle">Log a Drink</h2>
+    <div class="modal-sub">Choose the time this happened</div>
+    <div class="time-input-wrap">
+      <div class="time-field">
+        <label>Time</label>
+        <input type="time" id="timeInput">
+        <div class="quick-times" id="quickTimes"></div>
+      </div>
+    </div>
+    <div class="time-modal-btns">
+      <button class="btn-cancel" onclick="closeTimeModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmTimeLog()">Log It</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Time Modal -->
+
+<div class="modal-overlay" id="editTimeModalOverlay" onclick="closeEditTimeModalOnBg(event)">
+  <div class="time-modal">
+    <h2>Edit Time</h2>
+    <div class="modal-sub">Update the logged time for this entry</div>
+    <div class="time-input-wrap">
+      <div class="time-field">
+        <label>Time</label>
+        <input type="time" id="editTimeInput">
+      </div>
+    </div>
+    <div class="time-modal-btns">
+      <button class="btn-cancel" onclick="closeEditTimeModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmEditTime()">Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- Header -->
+
+  <header>
+    <div class="logo">
+      <h1>FlowLog</h1>
+      <p>Hydration & Output</p>
+    </div>
+    <div class="header-right">
+      <div class="date-pill">
+        <button onclick="changeDay(-1)">‹</button>
+        <span id="dateLbl">Today</span>
+        <button onclick="changeDay(1)">›</button>
+      </div>
+      <button class="settings-btn" onclick="openSettings()" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- Morning Check-in (rendered by JS) -->
+
+  <div id="checkinCard"></div>
+
+  <!-- Ring -->
+
+  <div class="ring-section">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 180 180">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#1a6e8a"/>
+            <stop offset="100%" style="stop-color:#5cc8e8"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="90" cy="90" r="80"/>
+        <circle class="ring-fill" id="ringFill" cx="90" cy="90" r="80"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-pct" id="ringPct">0%</span>
+        <span class="ring-sub">of daily goal</span>
+        <span class="ring-oz" id="ringOz">0 oz</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-n blue" id="statD">0</div>
+      <div class="stat-lbl">Drinks</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n blue" id="statOz">0 oz</div>
+      <div class="stat-lbl">Fluid In</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n gold" id="statP">0</div>
+      <div class="stat-lbl">Pee Events</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n green" id="statRatio">—</div>
+      <div class="stat-lbl">I/O Ratio</div>
+    </div>
+  </div>
+
+  <!-- Panels -->
+
+  <div class="panels">
+
+```
+<div class="panel drink-panel">
+  <div class="panel-glow"></div>
+  <div class="panel-header">
+    <div class="panel-icon">💧</div>
+    <span class="panel-title-text">Intake</span>
+  </div>
+
+  
+  <div class="drink-type-row" id="drinkTypeRow">
+    <button class="dtype-btn sel" data-val="Water" onclick="selectDrinkType(this)">&#x1F4A7; Water</button>
+    <button class="dtype-btn" data-val="Tea" onclick="selectDrinkType(this)">&#x1F375; Tea</button>
+    <button class="dtype-btn" data-val="Coffee" onclick="selectDrinkType(this)">&#x2615; Coffee</button>
+    <button class="dtype-btn" data-val="Juice" onclick="selectDrinkType(this)">&#x1F9C3; Juice</button>
+    <button class="dtype-btn" data-val="Milk" onclick="selectDrinkType(this)">&#x1F95B; Milk</button>
+    <button class="dtype-btn" data-val="Soda" onclick="selectDrinkType(this)">&#x1F9C2; Soda</button>
+    <button class="dtype-btn" data-val="Other" onclick="selectDrinkType(this)">&#x2795; Other</button>
+  </div>
+  <div id="cutoffBanner" class="cutoff-banner">
+    <div class="cutoff-banner-icon">&#x1F319;</div>
+    <div class="cutoff-banner-text">
+      <strong>Past your fluid cutoff</strong>
+      Bedtime in <span id="bedtimeCountdown">—</span> &mdash; consider sipping slowly
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <button class="log-btn drink-btn" style="margin-bottom:0;flex:1;" onclick="logDrink()">
+      <div class="btn-ripple"></div>
+      <div class="btn-icon">🥤</div>
+      <div class="btn-label">Log Now</div>
+      <div class="btn-sub" id="drinkSizeLbl">12 oz · current time</div>
+    </button>
+    <button class="log-btn drink-btn" style="margin-bottom:0;width:64px;padding:14px 8px;flex-shrink:0;" onclick="openTimeModal('drink')" title="Log with a past time">
+      <div class="btn-ripple"></div>
+      <div style="font-size:1.5rem;line-height:1;">&#x1F550;</div>
+      <div class="btn-sub" style="font-size:0.58rem;margin-top:4px;">past time</div>
+    </button>
+  </div>
+
+  <div class="log-list" id="drinkList">
+    <div class="empty-msg"><span class="ei">💧</span>No drinks logged yet</div>
+  </div>
+</div>
+
+<div class="panel pee-panel">
+  <div class="panel-glow"></div>
+  <div class="panel-header">
+    <div class="panel-icon">🚽</div>
+    <span class="panel-title-text">Output</span>
+  </div>
+
+  <div class="pee-types">
+    <button class="pee-type sel" data-val="clear" onclick="selectPeeType(this)"><span>💎</span>Clear</button>
+    <button class="pee-type" data-val="light" onclick="selectPeeType(this)"><span>💛</span>Light</button>
+    <button class="pee-type" data-val="normal" onclick="selectPeeType(this)"><span>🟡</span>Normal</button>
+    <button class="pee-type" data-val="dark" onclick="selectPeeType(this)"><span>🟠</span>Dark</button>
+    <button class="pee-type" data-val="urgent" onclick="selectPeeType(this)"><span>⚡</span>Urgent</button>
+    <button class="pee-type" data-val="night" onclick="selectPeeType(this)"><span>🌙</span>Night</button>
+  </div>
+
+  
+  <div class="drink-type-row" id="drinkTypeRow">
+    <button class="dtype-btn sel" data-val="Water" onclick="selectDrinkType(this)">&#x1F4A7; Water</button>
+    <button class="dtype-btn" data-val="Tea" onclick="selectDrinkType(this)">&#x1F375; Tea</button>
+    <button class="dtype-btn" data-val="Coffee" onclick="selectDrinkType(this)">&#x2615; Coffee</button>
+    <button class="dtype-btn" data-val="Juice" onclick="selectDrinkType(this)">&#x1F9C3; Juice</button>
+    <button class="dtype-btn" data-val="Milk" onclick="selectDrinkType(this)">&#x1F95B; Milk</button>
+    <button class="dtype-btn" data-val="Soda" onclick="selectDrinkType(this)">&#x1F9C2; Soda</button>
+    <button class="dtype-btn" data-val="Other" onclick="selectDrinkType(this)">&#x2795; Other</button>
+  </div>
+  <div id="cutoffBanner" class="cutoff-banner">
+    <div class="cutoff-banner-icon">&#x1F319;</div>
+    <div class="cutoff-banner-text">
+      <strong>Past your fluid cutoff</strong>
+      Bedtime in <span id="bedtimeCountdown">—</span> &mdash; consider sipping slowly
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <button class="log-btn pee-btn" style="margin-bottom:0;flex:1;" onclick="logPee()">
+      <div class="btn-ripple"></div>
+      <div class="btn-icon">&#x1F6BD;</div>
+      <div class="btn-label">Log Now</div>
+      <div class="btn-sub" id="peeTypeLbl">clear · current time</div>
+    </button>
+    <button class="log-btn pee-btn" style="margin-bottom:0;width:64px;padding:14px 8px;flex-shrink:0;" onclick="openTimeModal('pee')" title="Log with a past time">
+      <div class="btn-ripple"></div>
+      <div style="font-size:1.5rem;line-height:1;">&#x1F550;</div>
+      <div class="btn-sub" style="font-size:0.58rem;margin-top:4px;color:rgba(30,20,0,0.6);">past time</div>
+    </button>
+  </div>
+
+  <div class="log-list" id="peeList">
+    <div class="empty-msg"><span class="ei">🚽</span>No output logged yet</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Balance -->
+
+  <div class="balance-card">
+    <div class="balance-top">
+      <span class="balance-lbl">Input / Output Balance</span>
+      <span class="balance-ratio" id="balanceRatio">—</span>
+    </div>
+    <div class="balance-track">
+      <div class="balance-fill" id="balanceFill" style="width:0%"></div>
+    </div>
+    <div class="balance-markers">
+      <span>Low Output</span>
+      <span>Balanced</span>
+      <span>High Output</span>
+    </div>
+  </div>
+
+  <!-- Lower section -->
+
+  <div class="section-lower">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('trends')">📊 Trends</button>
+      <button class="tab" onclick="showTab('insights')">💡 Insights</button>
+      <button class="tab" onclick="showTab('report')">📋 Reports</button>
+    </div>
+
+```
+<div id="tab-trends" class="card">
+  <div class="card-title">7-Day Overview</div>
+  <div class="week-chart" id="weekChart"></div>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:var(--wdark)"></div>Drinks</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--y)"></div>Output</div>
+  </div>
+</div>
+
+<div id="tab-insights" class="card" style="display:none">
+  <div class="card-title">Trends & Insights</div>
+  <div class="insights-grid" id="insightsGrid"></div>
+</div>
+
+<div id="tab-report" class="card" style="display:none">
+  <div class="card-title">Generate Report</div>
+  <div class="report-actions">
+    <button class="rbtn primary" onclick="genReport('daily')">📄 Daily</button>
+    <button class="rbtn primary" onclick="genReport('weekly')">📅 Weekly</button>
+    <button class="rbtn" onclick="copyReport()">📋 Copy</button>
+    <button class="rbtn" onclick="dlReport()">💾 Save .txt</button>
+  </div>
+  <pre class="report-pre" id="reportPre"></pre>
+</div>
+```
+
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+// iOS Safari safe - pure ES5, no template literals, no NodeList.forEach
+// All HTML built through a safe element builder, not string concatenation
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function qsEach(sel, fn) {
+  var els = document.querySelectorAll(sel);
+  for (var i = 0; i < els.length; i++) { fn(els[i], i); }
+}
+
+function el(tag, attrs, children) {
+  var e = document.createElement(tag);
+  if (attrs) {
+    for (var k in attrs) {
+      if (k === 'cls') { e.className = attrs[k]; }
+      else if (k === 'html') { e.innerHTML = attrs[k]; }
+      else if (k === 'txt') { e.textContent = attrs[k]; }
+      else if (k === 'click') { e.onclick = attrs[k]; }
+      else if (k === 'style') { e.style.cssText = attrs[k]; }
+      else { e.setAttribute(k, attrs[k]); }
+    }
+  }
+  if (children) {
+    for (var i = 0; i < children.length; i++) {
+      if (children[i]) e.appendChild(children[i]);
+    }
+  }
+  return e;
+}
+
+function txt(str) { return document.createTextNode(str); }
+
+function setEl(id, html) { document.getElementById(id).innerHTML = html; }
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var SK = 'flowlog_v4';
+var SS = 'flowlog_settings_v4';
+var state = {};
+var settings = { goal: 8, oz: 12, bedtime: '21:30' };
+var currentDate = todayStr();
+var peeType = 'clear';
+var drinkType = 'Water';
+var reportText = '';
+var timeModalType = 'drink';
+var editTarget = null;
+var tempGoal = 8;
+var tempOz = 12;
+var tempBedtime = '21:30';
+var checkinWakes = 0;
+var checkinLogged = [];
+var checkinMaxWakes = 0;
+
+// ── DATE / TIME UTILS ─────────────────────────────────────────────────────────
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function yesterdayStr() {
+  var d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
+function dayData(d) {
+  if (!state[d]) { state[d] = { drinks: [], pees: [], sleep: null }; }
+  return state[d];
+}
+
+function load() {
+  try { state = JSON.parse(localStorage.getItem(SK)) || {}; } catch(e) { state = {}; }
+  try {
+    var s = JSON.parse(localStorage.getItem(SS));
+    if (s) {
+      settings.goal = s.goal || 8;
+      settings.oz = s.oz || 12;
+      settings.bedtime = s.bedtime || '21:30';
+    }
+  } catch(e) {}
+}
+
+function save() {
+  localStorage.setItem(SK, JSON.stringify(state));
+  localStorage.setItem(SS, JSON.stringify(settings));
+}
+
+function fmtDate(dateStr) {
+  var d = new Date(dateStr + 'T12:00:00');
+  var t = todayStr();
+  var y = new Date();
+  y.setDate(y.getDate() - 1);
+  var ys = y.toISOString().split('T')[0];
+  var ds = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (dateStr === t) { return 'Today, ' + ds; }
+  if (dateStr === ys) { return 'Yesterday, ' + ds; }
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function timeNow() {
+  return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function to12h(val) {
+  var parts = val.split(':');
+  var h = parseInt(parts[0]);
+  var m = parseInt(parts[1]);
+  var ampm = (h >= 12) ? 'PM' : 'AM';
+  var h12 = h % 12;
+  if (h12 === 0) { h12 = 12; }
+  var mm = (m < 10) ? ('0' + m) : ('' + m);
+  return h12 + ':' + mm + ' ' + ampm;
+}
+
+function to24h(timeStr) {
+  var s = timeStr.trim();
+  var ampm = '';
+  var sUp = s.toUpperCase();
+  if (sUp.indexOf('PM') !== -1) { ampm = 'PM'; }
+  else if (sUp.indexOf('AM') !== -1) { ampm = 'AM'; }
+  s = s.replace(/[APap][Mm]/g, '').trim();
+  var parts = s.split(':');
+  if (parts.length < 2) { return '00:00'; }
+  var h = parseInt(parts[0]);
+  var m = parseInt(parts[1]);
+  if (isNaN(h) || isNaN(m)) { return '00:00'; }
+  if (ampm === 'PM' && h !== 12) { h += 12; }
+  if (ampm === 'AM' && h === 12) { h = 0; }
+  var hh = (h < 10) ? ('0' + h) : ('' + h);
+  var mm = (m < 10) ? ('0' + m) : ('' + m);
+  return hh + ':' + mm;
+}
+
+function peeDate(h24str) {
+  var h = parseInt(h24str.split(':')[0]);
+  if (h >= 0 && h < 12) { return todayStr(); }
+  return yesterdayStr();
+}
+
+function bedtimeCutoff(bt) {
+  var parts = bt.split(':');
+  var h = parseInt(parts[0]);
+  var m = parseInt(parts[1]);
+  var total = h * 60 + m - 180;
+  if (total < 0) { total += 1440; }
+  var ch = Math.floor(total / 60);
+  var cm = total % 60;
+  return ((ch < 10) ? ('0' + ch) : ('' + ch)) + ':' + ((cm < 10) ? ('0' + cm) : ('' + cm));
+}
+
+function isPastCutoff() {
+  if (!settings.bedtime) { return false; }
+  var cutoff = bedtimeCutoff(settings.bedtime);
+  var now = new Date();
+  var nowMins = now.getHours() * 60 + now.getMinutes();
+  var cp = cutoff.split(':');
+  var cutoffMins = parseInt(cp[0]) * 60 + parseInt(cp[1]);
+  var bp = settings.bedtime.split(':');
+  var bedMins = parseInt(bp[0]) * 60 + parseInt(bp[1]);
+  if (cutoffMins > bedMins) {
+    return (nowMins >= cutoffMins || nowMins < bedMins);
+  }
+  return (nowMins >= cutoffMins && nowMins < bedMins);
+}
+
+function minutesToBedtime() {
+  if (!settings.bedtime) { return null; }
+  var now = new Date();
+  var nowMins = now.getHours() * 60 + now.getMinutes();
+  var bp = settings.bedtime.split(':');
+  var bedMins = parseInt(bp[0]) * 60 + parseInt(bp[1]);
+  var diff = bedMins - nowMins;
+  if (diff < 0) { diff += 1440; }
+  return diff;
+}
+
+function formatMinsUntilBed() {
+  var m = minutesToBedtime();
+  if (m === null) { return ''; }
+  if (m >= 60) {
+    var h = Math.floor(m / 60);
+    var mn = m % 60;
+    return h + 'h' + (mn > 0 ? ' ' + mn + 'm' : '');
+  }
+  return m + ' min';
+}
+
+// ── DATE NAV ──────────────────────────────────────────────────────────────────
+function changeDay(d) {
+  var nd = new Date(currentDate + 'T12:00:00');
+  nd.setDate(nd.getDate() + d);
+  var ns = nd.toISOString().split('T')[0];
+  if (ns > todayStr()) { return; }
+  currentDate = ns;
+  render();
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+function openSettings() {
+  tempGoal = settings.goal;
+  tempOz = settings.oz;
+  tempBedtime = settings.bedtime || '21:30';
+  qsEach('.goal-opt', function(b) {
+    b.classList.toggle('selected', parseInt(b.getAttribute('data-val')) === tempGoal);
+  });
+  qsEach('.oz-opt', function(b) {
+    b.classList.toggle('selected', parseInt(b.getAttribute('data-val')) === tempOz);
+  });
+  document.getElementById('bedtimeInput').value = tempBedtime;
+  updateCutoffPreview();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function closeSettingsOnBg(e) {
+  if (e.target === document.getElementById('modalOverlay')) { closeSettings(); }
+}
+
+function selectGoal(val, elem) {
+  tempGoal = val;
+  qsEach('.goal-opt', function(b) { b.classList.remove('selected'); });
+  elem.classList.add('selected');
+  document.getElementById('customGoalInput').value = '';
+  updateGoalDesc();
+}
+
+function applyCustomGoal() {
+  var v = parseInt(document.getElementById('customGoalInput').value);
+  if (!v || v < 1 || v > 30) { showToast('Enter 1 to 30'); return; }
+  tempGoal = v;
+  qsEach('.goal-opt', function(b) { b.classList.remove('selected'); });
+  updateGoalDesc();
+}
+
+function updateGoalDesc() {
+  document.getElementById('goalDescVal').textContent = tempGoal + ' drinks - ' + (tempGoal * (tempOz || settings.oz)) + ' oz';
+}
+
+function selectOz(val, elem) {
+  tempOz = val;
+  qsEach('.oz-opt', function(b) { b.classList.remove('selected'); });
+  elem.classList.add('selected');
+  updateGoalDesc();
+}
+
+function updateCutoffPreview() {
+  var bt = document.getElementById('bedtimeInput').value;
+  if (!bt) { return; }
+  tempBedtime = bt;
+  document.getElementById('cutoffPreview').textContent = to12h(bedtimeCutoff(bt));
+}
+
+function saveSettings() {
+  settings.goal = tempGoal;
+  settings.oz = tempOz;
+  settings.bedtime = document.getElementById('bedtimeInput').value || '21:30';
+  save();
+  closeSettings();
+  render();
+  showToast('Settings saved');
+}
+
+// ── DRINK TYPE ─────────────────────────────────────────────────────────────────
+function selectDrinkType(elem) {
+  qsEach('.dtype-btn', function(b) { b.classList.remove('sel'); });
+  elem.classList.add('sel');
+  drinkType = elem.getAttribute('data-val');
+}
+
+// ── LOG ACTIONS ────────────────────────────────────────────────────────────────
+function logDrink(customTime) {
+  var dd = dayData(currentDate);
+  var t = customTime || timeNow();
+  dd.drinks.push({ id: Date.now(), time: t, oz: settings.oz, type: drinkType });
+  dd.drinks.sort(function(a, b) { return a.time > b.time ? 1 : -1; });
+  save();
+  render();
+  showToast(drinkType + ' logged');
+}
+
+function logPee(customTime) {
+  var dd = dayData(currentDate);
+  var t = customTime || timeNow();
+  dd.pees.push({ id: Date.now(), time: t, color: peeType });
+  dd.pees.sort(function(a, b) { return a.time > b.time ? 1 : -1; });
+  save();
+  render();
+  showToast('Output logged');
+}
+
+function deleteEntry(date, type, id) {
+  var arr = dayData(date)[type];
+  var newArr = [];
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i].id !== id) { newArr.push(arr[i]); }
+  }
+  dayData(date)[type] = newArr;
+  save();
+  render();
+}
+
+function selectPeeType(elem) {
+  qsEach('.pee-type', function(b) { b.classList.remove('sel'); });
+  elem.classList.add('sel');
+  peeType = elem.getAttribute('data-val');
+  document.getElementById('peeTypeLbl').textContent = peeType + ' - current time';
+}
+
+// ── MORNING CHECK-IN ──────────────────────────────────────────────────────────
+function shouldShowCheckin() {
+  var today = todayStr();
+  var dd = dayData(today);
+  var hour = new Date().getHours();
+  return (!dd.sleep && hour < 14);
+}
+
+function renderCheckin() {
+  var card = document.getElementById('checkinCard');
+  if (!shouldShowCheckin()) { card.innerHTML = ''; return; }
+
+  var wrap = el('div', { cls: 'checkin-card' });
+  var top = el('div', { cls: 'checkin-card-top' });
+  var topLeft = el('div', {});
+  topLeft.appendChild(el('div', { cls: 'checkin-title', txt: 'Good morning' }));
+  topLeft.appendChild(el('div', { cls: 'checkin-sub', txt: 'Did you wake up to pee last night?' }));
+  var dismissBtn = el('button', { cls: 'checkin-dismiss', txt: 'x', click: dismissCheckin });
+  top.appendChild(topLeft);
+  top.appendChild(dismissBtn);
+  wrap.appendChild(top);
+
+  var btns = el('div', { cls: 'checkin-btns' });
+
+  var b1 = el('button', { cls: 'checkin-btn good', click: checkinSleptThrough });
+  b1.appendChild(el('span', { cls: 'cb-icon', html: '&#x1F634;' }));
+  b1.appendChild(el('span', { cls: 'cb-label', txt: 'No, slept through' }));
+
+  var b2 = el('button', { cls: 'checkin-btn once', click: function() { checkinStartWakes(1); } });
+  b2.appendChild(el('span', { cls: 'cb-icon', html: '&#x1F319;' }));
+  b2.appendChild(el('span', { cls: 'cb-label', txt: 'Yes, once' }));
+
+  var b3 = el('button', { cls: 'checkin-btn multi', click: function() { checkinStartWakes(4); } });
+  b3.appendChild(el('span', { cls: 'cb-icon', html: '&#x1F31A;&#x1F31A;' }));
+  b3.appendChild(el('span', { cls: 'cb-label', txt: 'Yes, 2+ times' }));
+
+  btns.appendChild(b1);
+  btns.appendChild(b2);
+  btns.appendChild(b3);
+  wrap.appendChild(btns);
+
+  card.innerHTML = '';
+  card.appendChild(wrap);
+}
+
+function checkinSleptThrough() {
+  var today = todayStr();
+  dayData(today).sleep = { voids: 0, wakes: [], date: today };
+  save();
+  var card = document.getElementById('checkinCard');
+  card.innerHTML = '';
+  var w = el('div', { cls: 'checkin-card', style: 'text-align:center;padding:18px 22px;' });
+  w.appendChild(el('div', { style: 'font-size:1.8rem;margin-bottom:6px;', html: '&#x1F634;' }));
+  w.appendChild(el('div', { style: 'font-size:0.95rem;color:var(--text);', txt: 'Full night logged!' }));
+  w.appendChild(el('div', { style: 'font-size:0.7rem;color:var(--text3);margin-top:4px;', txt: 'Great sleep - no night waking recorded.' }));
+  card.appendChild(w);
+  setTimeout(function() { card.innerHTML = ''; }, 3000);
+  renderInsights();
+}
+
+function checkinStartWakes(maxWakes) {
+  checkinWakes = 0;
+  checkinLogged = [];
+  checkinMaxWakes = maxWakes;
+  renderCheckinTimeStep();
+}
+
+function renderCheckinTimeStep() {
+  var wakeNum = checkinLogged.length + 1;
+  var label = (checkinMaxWakes === 1) ? 'What time did you wake?' : 'Wake ' + wakeNum + ' - what time?';
+  var defaults = ['02:00', '04:00', '05:00', '05:30'];
+  var defVal = defaults[Math.min(checkinLogged.length, defaults.length - 1)];
+
+  var card = document.getElementById('checkinCard');
+  card.innerHTML = '';
+
+  var wrap = el('div', { cls: 'checkin-card' });
+
+  var top = el('div', { cls: 'checkin-card-top' });
+  var topLeft = el('div', {});
+  topLeft.appendChild(el('div', { cls: 'checkin-title', txt: label }));
+  topLeft.appendChild(el('div', { cls: 'checkin-sub', txt: 'Check your Apple Watch for the exact time' }));
+  top.appendChild(topLeft);
+  top.appendChild(el('button', { cls: 'checkin-dismiss', txt: 'x', click: dismissCheckin }));
+  wrap.appendChild(top);
+
+  var inputWrap = el('div', { cls: 'time-input-wrap', style: 'margin-bottom:14px;' });
+  var field = el('div', { cls: 'time-field' });
+  field.appendChild(el('label', { txt: 'Time you got up' }));
+  var inp = el('input', { type: 'time', id: 'checkinTimeInput' });
+  inp.value = defVal;
+  field.appendChild(inp);
+  inputWrap.appendChild(field);
+  wrap.appendChild(inputWrap);
+
+  var btnRow = el('div', { style: 'display:flex;gap:8px;' });
+  btnRow.appendChild(el('button', { cls: 'btn-cancel', style: 'flex:1;', txt: 'Don t know', click: checkinSkipTime }));
+  btnRow.appendChild(el('button', { cls: 'btn-save', style: 'flex:2;', txt: 'Log this wake', click: checkinLogWake }));
+  wrap.appendChild(btnRow);
+
+  card.appendChild(wrap);
+}
+
+function checkinLogWake() {
+  var input = document.getElementById('checkinTimeInput');
+  var val = input ? input.value : null;
+  var timeStr = val ? to12h(val) : null;
+  var dateForPee = val ? peeDate(val) : todayStr();
+  var t = timeStr || '2:00 AM';
+  var dd = dayData(dateForPee);
+  dd.pees.push({ id: Date.now(), time: t, color: 'night' });
+  dd.pees.sort(function(a, b) { return a.time > b.time ? 1 : -1; });
+  checkinLogged.push({ time: t, date: dateForPee });
+  save();
+  var maxReached = (checkinMaxWakes === 1 || checkinLogged.length >= 4);
+  if (!maxReached) { renderCheckinAskAnother(); }
+  else { checkinFinish(); }
+}
+
+function checkinSkipTime() {
+  var defaults = ['02:00', '03:30', '05:00', '05:30'];
+  var defVal = defaults[Math.min(checkinLogged.length, defaults.length - 1)];
+  var timeStr = to12h(defVal);
+  var dateForPee = peeDate(defVal);
+  var dd = dayData(dateForPee);
+  dd.pees.push({ id: Date.now(), time: timeStr, color: 'night' });
+  dd.pees.sort(function(a, b) { return a.time > b.time ? 1 : -1; });
+  checkinLogged.push({ time: timeStr, date: dateForPee });
+  save();
+  var maxReached = (checkinMaxWakes === 1 || checkinLogged.length >= 4);
+  if (!maxReached) { renderCheckinAskAnother(); }
+  else { checkinFinish(); }
+}
+
+function renderCheckinAskAnother() {
+  var card = document.getElementById('checkinCard');
+  card.innerHTML = '';
+  var wrap = el('div', { cls: 'checkin-card' });
+  var top = el('div', { cls: 'checkin-card-top' });
+  var topLeft = el('div', {});
+  topLeft.appendChild(el('div', { cls: 'checkin-title', txt: 'Another wake?' }));
+  topLeft.appendChild(el('div', { cls: 'checkin-sub', txt: checkinLogged.length + ' wake(s) logged so far' }));
+  top.appendChild(topLeft);
+  top.appendChild(el('button', { cls: 'checkin-dismiss', txt: 'x', click: dismissCheckin }));
+  wrap.appendChild(top);
+  var grid = el('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;' });
+  var b1 = el('button', { cls: 'checkin-btn once', click: renderCheckinTimeStep });
+  b1.appendChild(el('span', { cls: 'cb-icon', txt: '+' }));
+  b1.appendChild(el('span', { cls: 'cb-label', txt: 'Yes, add another' }));
+  var b2 = el('button', { cls: 'checkin-btn good', click: checkinFinish });
+  b2.appendChild(el('span', { cls: 'cb-icon', txt: 'done' }));
+  b2.appendChild(el('span', { cls: 'cb-label', txt: 'No, done' }));
+  grid.appendChild(b1);
+  grid.appendChild(b2);
+  wrap.appendChild(grid);
+  card.appendChild(wrap);
+}
+
+function checkinFinish() {
+  var today = todayStr();
+  var totalWakes = checkinLogged.length;
+  dayData(today).sleep = { voids: totalWakes, wakes: checkinLogged, date: today };
+  save();
+  var summary = (totalWakes === 1) ? ('1 night pee logged at ' + checkinLogged[0].time) : (totalWakes + ' night pees logged');
+  var card = document.getElementById('checkinCard');
+  card.innerHTML = '';
+  var w = el('div', { cls: 'checkin-card', style: 'text-align:center;padding:18px 22px;' });
+  w.appendChild(el('div', { style: 'font-size:1.8rem;margin-bottom:6px;', html: '&#x1F319;' }));
+  w.appendChild(el('div', { style: 'font-size:0.95rem;color:var(--text);', txt: summary }));
+  w.appendChild(el('div', { style: 'font-size:0.7rem;color:var(--text3);margin-top:4px;', txt: 'Added to your pee log.' }));
+  card.appendChild(w);
+  setTimeout(function() { card.innerHTML = ''; }, 3500);
+  renderInsights();
+  render();
+}
+
+function dismissCheckin() {
+  var today = todayStr();
+  dayData(today).sleep = { voids: -1, date: today };
+  save();
+  document.getElementById('checkinCard').innerHTML = '';
+}
+
+// ── CUTOFF BANNER ─────────────────────────────────────────────────────────────
+function updateCutoffBanner() {
+  var banner = document.getElementById('cutoffBanner');
+  var panel = document.querySelector('.drink-panel');
+  var isToday = (currentDate === todayStr());
+  if (isToday && isPastCutoff()) {
+    banner.classList.add('show');
+    if (panel) { panel.classList.add('past-cutoff'); }
+    var countdown = document.getElementById('bedtimeCountdown');
+    if (countdown) { countdown.textContent = formatMinsUntilBed() + ' until bedtime'; }
+  } else {
+    banner.classList.remove('show');
+    if (panel) { panel.classList.remove('past-cutoff'); }
+  }
+}
+
+// ── TIME MODAL ─────────────────────────────────────────────────────────────────
+function openTimeModal(type) {
+  timeModalType = type;
+  var now = new Date();
+  var hh = (now.getHours() < 10) ? ('0' + now.getHours()) : ('' + now.getHours());
+  var mm = (now.getMinutes() < 10) ? ('0' + now.getMinutes()) : ('' + now.getMinutes());
+  document.getElementById('timeInput').value = hh + ':' + mm;
+  document.getElementById('timeModalTitle').textContent = (type === 'drink') ? 'Log a Drink' : 'Log Output';
+  var chips = document.getElementById('quickTimes');
+  chips.innerHTML = '';
+  for (var back = 30; back <= 240; back += 30) {
+    var d = new Date(now.getTime() - back * 60000);
+    var h2 = (d.getHours() < 10) ? ('0' + d.getHours()) : ('' + d.getHours());
+    var m2 = (d.getMinutes() < 10) ? ('0' + d.getMinutes()) : ('' + d.getMinutes());
+    var disp = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    var val = h2 + ':' + m2;
+    var btn = el('button', { cls: 'qt-btn', txt: disp });
+    (function(v) { btn.onclick = function() { setQuickTime(v); }; })(val);
+    chips.appendChild(btn);
+  }
+  document.getElementById('timeModalOverlay').classList.add('open');
+}
+
+function setQuickTime(val) {
+  document.getElementById('timeInput').value = val;
+}
+
+function closeTimeModal() {
+  document.getElementById('timeModalOverlay').classList.remove('open');
+}
+
+function closeTimeModalOnBg(e) {
+  if (e.target === document.getElementById('timeModalOverlay')) { closeTimeModal(); }
+}
+
+function confirmTimeLog() {
+  var val = document.getElementById('timeInput').value;
+  if (!val) { showToast('Please select a time'); return; }
+  var timeStr = to12h(val);
+  closeTimeModal();
+  if (timeModalType === 'drink') { logDrink(timeStr); }
+  else { logPee(timeStr); }
+}
+
+// ── EDIT TIME MODAL ────────────────────────────────────────────────────────────
+function openEditTimeModal(date, type, id, currentTime) {
+  editTarget = { date: date, type: type, id: id };
+  document.getElementById('editTimeInput').value = to24h(currentTime);
+  document.getElementById('editTimeModalOverlay').classList.add('open');
+}
+
+function closeEditTimeModal() {
+  document.getElementById('editTimeModalOverlay').classList.remove('open');
+  editTarget = null;
+}
+
+function closeEditTimeModalOnBg(e) {
+  if (e.target === document.getElementById('editTimeModalOverlay')) { closeEditTimeModal(); }
+}
+
+function confirmEditTime() {
+  if (!editTarget) { return; }
+  var val = document.getElementById('editTimeInput').value;
+  if (!val) { showToast('Please select a time'); return; }
+  var timeStr = to12h(val);
+  var arr = dayData(editTarget.date)[editTarget.type];
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i].id === editTarget.id) { arr[i].time = timeStr; break; }
+  }
+  arr.sort(function(a, b) { return a.time > b.time ? 1 : -1; });
+  save();
+  render();
+  closeEditTimeModal();
+  showToast('Time updated');
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+var drinkIcons = { Water: '&#x1F4A7;', Tea: '&#x1F375;', Coffee: '&#x2615;', Juice: '&#x1F9C3;', Milk: '&#x1F95B;', Soda: '&#x1F9C2;', Other: '&#x1F964;' };
+var peeIcons = { clear: '&#x1F48E;', light: '&#x1F49B;', normal: '&#x1F7E1;', dark: '&#x1F7E0;', urgent: '&#x26A1;', night: '&#x1F319;' };
+
+function render() {
+  document.getElementById('dateLbl').textContent = fmtDate(currentDate);
+  document.getElementById('drinkSizeLbl').textContent = settings.oz + ' oz - current time';
+
+  var dd = dayData(currentDate);
+  var dc = dd.drinks.length;
+  var pc = dd.pees.length;
+  var oz = 0;
+  for (var i = 0; i < dd.drinks.length; i++) { oz += dd.drinks[i].oz; }
+  var goalOz = settings.goal * settings.oz;
+  var pct = Math.min(100, Math.round(dc / settings.goal * 100));
+  var circum = 502;
+  var offset = circum - (pct / 100 * circum);
+
+  document.getElementById('ringPct').textContent = pct + '%';
+  document.getElementById('ringOz').textContent = oz + ' oz of ' + goalOz + ' oz goal';
+  document.getElementById('ringFill').style.strokeDashoffset = offset;
+  document.getElementById('statD').textContent = dc;
+  document.getElementById('statOz').textContent = oz + ' oz';
+  document.getElementById('statP').textContent = pc;
+  var ratio = (dc > 0) ? (pc / dc).toFixed(1) : '--';
+  document.getElementById('statRatio').textContent = ratio;
+
+  // balance bar
+  var fillEl = document.getElementById('balanceFill');
+  var ratioEl = document.getElementById('balanceRatio');
+  if (dc > 0) {
+    var r = pc / dc;
+    var pf = Math.min(100, r * 50);
+    var col = (r < 0.4) ? '#3b82f6' : (r > 1.8) ? '#f59e0b' : '#059669';
+    fillEl.style.width = pf + '%';
+    fillEl.style.background = col;
+    ratioEl.textContent = ratio + 'x';
+  } else {
+    fillEl.style.width = '0%';
+    ratioEl.textContent = '--';
+  }
+
+  updateCutoffBanner();
+  renderDrinkList(dd, dc);
+  renderPeeList(dd, pc);
+  renderChart();
+  renderInsights();
+}
+
+function renderDrinkList(dd, dc) {
+  var dl = document.getElementById('drinkList');
+  dl.innerHTML = '';
+  if (dc === 0) {
+    var empty = el('div', { cls: 'empty-msg' });
+    empty.appendChild(el('span', { cls: 'ei', html: '&#x1F4A7;' }));
+    empty.appendChild(txt('No drinks logged yet'));
+    dl.appendChild(empty);
+    return;
+  }
+  var rev = dd.drinks.slice().reverse();
+  for (var i = 0; i < rev.length; i++) {
+    var e = rev[i];
+    var dtype = e.type || 'Water';
+    var dico = drinkIcons[dtype] || '&#x1F964;';
+    var row = el('div', { cls: 'log-entry' });
+    row.appendChild(el('div', { cls: 'e-dot', style: 'background:var(--wdark)' }));
+    var tw = el('div', { cls: 'e-time-wrap' });
+    tw.appendChild(el('span', { cls: 'e-time', txt: e.time }));
+    var editBtn = el('button', { cls: 'e-time-edit', html: '&#x270F;', title: 'Edit time' });
+    (function(d, t, eid, etime) {
+      editBtn.onclick = function() { openEditTimeModal(d, t, eid, etime); };
+    })(currentDate, 'drinks', e.id, e.time);
+    tw.appendChild(editBtn);
+    row.appendChild(tw);
+    var detail = el('span', { cls: 'e-detail' });
+    detail.innerHTML = dico + ' ' + dtype + ' ' + e.oz + ' oz';
+    row.appendChild(detail);
+    var delBtn = el('button', { cls: 'e-del', html: '&#x2715;' });
+    (function(d, t, eid) {
+      delBtn.onclick = function() { deleteEntry(d, t, eid); };
+    })(currentDate, 'drinks', e.id);
+    row.appendChild(delBtn);
+    dl.appendChild(row);
+  }
+}
+
+function renderPeeList(dd, pc) {
+  var pl = document.getElementById('peeList');
+  pl.innerHTML = '';
+  if (pc === 0) {
+    var empty = el('div', { cls: 'empty-msg' });
+    empty.appendChild(el('span', { cls: 'ei', html: '&#x1F6BD;' }));
+    empty.appendChild(txt('No output logged yet'));
+    pl.appendChild(empty);
+    return;
+  }
+  var rev = dd.pees.slice().reverse();
+  for (var j = 0; j < rev.length; j++) {
+    var ep = rev[j];
+    var ico = peeIcons[ep.color] || '&#x1F7E1;';
+    var row = el('div', { cls: 'log-entry' });
+    row.appendChild(el('div', { cls: 'e-dot', style: 'background:var(--y)' }));
+    var tw = el('div', { cls: 'e-time-wrap' });
+    tw.appendChild(el('span', { cls: 'e-time', txt: ep.time }));
+    var editBtn = el('button', { cls: 'e-time-edit', html: '&#x270F;', title: 'Edit time' });
+    (function(d, t, eid, etime) {
+      editBtn.onclick = function() { openEditTimeModal(d, t, eid, etime); };
+    })(currentDate, 'pees', ep.id, ep.time);
+    tw.appendChild(editBtn);
+    row.appendChild(tw);
+    var detail = el('span', { cls: 'e-detail' });
+    detail.innerHTML = ico + ' ' + ep.color;
+    row.appendChild(detail);
+    var delBtn = el('button', { cls: 'e-del', html: '&#x2715;' });
+    (function(d, t, eid) {
+      delBtn.onclick = function() { deleteEntry(d, t, eid); };
+    })(currentDate, 'pees', ep.id);
+    row.appendChild(delBtn);
+    pl.appendChild(row);
+  }
+}
+
+// ── CHART ──────────────────────────────────────────────────────────────────────
+function renderChart() {
+  var days = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  var maxD = settings.goal;
+  var maxP = 8;
+  for (var i = 0; i < days.length; i++) {
+    var dc2 = (state[days[i]] && state[days[i]].drinks) ? state[days[i]].drinks.length : 0;
+    var pc2 = (state[days[i]] && state[days[i]].pees) ? state[days[i]].pees.length : 0;
+    if (dc2 > maxD) { maxD = dc2; }
+    if (pc2 > maxP) { maxP = pc2; }
+  }
+  var maxV = Math.max(maxD, maxP);
+  var H = 110;
+  var chart = document.getElementById('weekChart');
+  chart.innerHTML = '';
+  for (var i = 0; i < days.length; i++) {
+    var d = days[i];
+    var dd2 = state[d] || { drinks: [], pees: [] };
+    var dc3 = dd2.drinks ? dd2.drinks.length : 0;
+    var pc3 = dd2.pees ? dd2.pees.length : 0;
+    var dH = Math.round(dc3 / maxV * H);
+    var pH = Math.round(pc3 / maxV * H);
+    var isT = (d === todayStr());
+    var lbl = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2);
+    var dayCls = isT ? 'chart-day today' : 'chart-day';
+    var dayDiv = el('div', { cls: dayCls });
+
+    // sleep dot
+    var sleepData = state[d] && state[d].sleep;
+    var dotDiv;
+    if (sleepData && sleepData.voids >= 0) {
+      var v = sleepData.voids;
+      var dotCls = (v === 0) ? 'noc-dot good' : (v === 1) ? 'noc-dot once' : 'noc-dot multi';
+      var dotTxt = (v === 0) ? 'ok' : ('' + v);
+      dotDiv = el('div', { cls: dotCls, txt: dotTxt });
+    } else {
+      dotDiv = el('div', { cls: 'noc-dot none', txt: '?' });
+    }
+    dayDiv.appendChild(dotDiv);
+
+    var bars = el('div', { cls: 'bars', style: 'height:' + H + 'px' });
+    var barD = el('div', { cls: 'bar bar-d', style: 'height:' + dH + 'px' });
+    var barP = el('div', { cls: 'bar bar-p', style: 'height:' + pH + 'px' });
+    bars.appendChild(barD);
+    bars.appendChild(barP);
+    dayDiv.appendChild(bars);
+    dayDiv.appendChild(el('div', { cls: 'chart-lbl', txt: lbl }));
+    chart.appendChild(dayDiv);
+  }
+}
+
+// ── INSIGHTS ───────────────────────────────────────────────────────────────────
+function renderInsights() {
+  var days = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  var allP = [];
+  for (var i = 0; i < days.length; i++) {
+    var dp = (state[days[i]] && state[days[i]].pees) ? state[days[i]].pees : [];
+    for (var j = 0; j < dp.length; j++) { allP.push(dp[j]); }
+  }
+  var dd = dayData(todayStr());
+  var dc = dd.drinks.length;
+  var oz = 0;
+  for (var i = 0; i < dd.drinks.length; i++) { oz += dd.drinks[i].oz; }
+  var goalOz = settings.goal * settings.oz;
+  var totalD = 0;
+  for (var i = 0; i < days.length; i++) {
+    totalD += (state[days[i]] && state[days[i]].drinks) ? state[days[i]].drinks.length : 0;
+  }
+  var avgD = totalD / 7;
+  var darkC = 0; var nightC = 0; var urgC = 0;
+  for (var i = 0; i < allP.length; i++) {
+    if (allP[i].color === 'dark') { darkC++; }
+    if (allP[i].color === 'night') { nightC++; }
+    if (allP[i].color === 'urgent') { urgC++; }
+  }
+
+  var sleepDays = 0; var nocturiaDays = 0; var lateAndBad = 0;
+  var cutoff = settings.bedtime ? bedtimeCutoff(settings.bedtime) : null;
+  for (var i = 0; i < days.length; i++) {
+    var dd2 = state[days[i]];
+    if (dd2 && dd2.sleep && dd2.sleep.voids >= 0) {
+      sleepDays++;
+      if (dd2.sleep.voids > 0) { nocturiaDays++; }
+      if (cutoff && dd2.sleep.voids > 0 && i > 0) {
+        var prevDD = state[days[i - 1]];
+        if (prevDD && prevDD.drinks) {
+          for (var j = 0; j < prevDD.drinks.length; j++) {
+            if (to24h(prevDD.drinks[j].time) >= cutoff) { lateAndBad++; break; }
+          }
+        }
+      }
+    }
+  }
+
+  var ins = [];
+  if (oz >= goalOz) { ins.push({ t: 'good', i: '&#x1F3C6;', n: 'Goal Reached!', d: oz + ' oz consumed today!' }); }
+  else if (oz >= goalOz * 0.6) { ins.push({ t: 'info', i: '&#x1F4A7;', n: 'On Track', d: oz + ' oz in, ' + (goalOz - oz) + ' oz to go.' }); }
+  else { ins.push({ t: 'warn', i: '&#x26A0;', n: 'Drink More', d: 'Only ' + oz + ' oz so far. Goal is ' + goalOz + ' oz.' }); }
+
+  if (settings.bedtime) {
+    var cutoff12 = to12h(bedtimeCutoff(settings.bedtime));
+    var bed12 = to12h(settings.bedtime);
+    if (isPastCutoff()) {
+      ins.push({ t: 'warn', i: '&#x1F319;', n: 'Past Fluid Cutoff', d: 'Limit intake - bedtime in ' + formatMinsUntilBed() });
+    } else {
+      ins.push({ t: 'info', i: '&#x23F0;', n: 'Fluid Cutoff ' + cutoff12, d: 'Stop drinking at ' + cutoff12 + ' to sleep better.' });
+    }
+  }
+
+  if (sleepDays >= 3) {
+    if (nocturiaDays === 0) {
+      ins.push({ t: 'good', i: '&#x1F634;', n: 'Great Sleep Week', d: 'No night waking in ' + sleepDays + ' logged nights!' });
+    } else {
+      var msg = nocturiaDays + ' of ' + sleepDays + ' nights with waking.';
+      if (lateAndBad > 0) { msg += ' Late drinking may be a factor.'; }
+      ins.push({ t: 'warn', i: '&#x1F319;', n: 'Nocturia Pattern', d: msg });
+    }
+    if (lateAndBad >= 2) {
+      ins.push({ t: 'bad', i: '&#x1F517;', n: 'Late Drinking Link', d: 'On ' + lateAndBad + ' nights, late drinks preceded waking.' });
+    }
+  } else if (sleepDays === 0) {
+    ins.push({ t: 'info', i: '&#x1F31E;', n: 'Track Your Sleep', d: 'Use the morning check-in to log night waking.' });
+  }
+
+  if (avgD >= settings.goal * 0.85) { ins.push({ t: 'good', i: '&#x1F4C8;', n: 'Strong Week', d: 'Averaging ' + avgD.toFixed(1) + ' drinks/day.' }); }
+  else if (avgD > 0) { ins.push({ t: 'warn', i: '&#x1F4C9;', n: 'Low Weekly Avg', d: avgD.toFixed(1) + ' drinks/day. Aim for ' + settings.goal + '+.' }); }
+  if (darkC >= 3) { ins.push({ t: 'bad', i: '&#x1F7E0;', n: 'Dark Urine Pattern', d: darkC + ' dark events this week.' }); }
+  if (urgC >= 3) { ins.push({ t: 'warn', i: '&#x26A1;', n: 'Urgency Pattern', d: urgC + ' urgent events - mention to your provider.' }); }
+
+  var grid = document.getElementById('insightsGrid');
+  grid.innerHTML = '';
+  for (var i = 0; i < ins.length; i++) {
+    var card = el('div', { cls: 'insight ' + ins[i].t });
+    card.appendChild(el('div', { cls: 'insight-ico', html: ins[i].i }));
+    card.appendChild(el('div', { cls: 'insight-name', txt: ins[i].n }));
+    card.appendChild(el('div', { cls: 'insight-desc', txt: ins[i].d }));
+    grid.appendChild(card);
+  }
+}
+
+// ── REPORTS ────────────────────────────────────────────────────────────────────
+function genReport(type) {
+  var dd = dayData(currentDate);
+  var goalOz = settings.goal * settings.oz;
+  var bed12 = settings.bedtime ? to12h(settings.bedtime) : 'Not set';
+  var cutoff12 = settings.bedtime ? to12h(bedtimeCutoff(settings.bedtime)) : 'Not set';
+  var r = '';
+  var line = '==============================================';
+  var div  = '------------------------------------------';
+
+  if (type === 'daily') {
+    var oz = 0;
+    for (var i = 0; i < dd.drinks.length; i++) { oz += dd.drinks[i].oz; }
+    var pct = Math.min(100, Math.round(dd.drinks.length / settings.goal * 100));
+    var date = new Date(currentDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    var drinkLines = '';
+    for (var i = 0; i < dd.drinks.length; i++) {
+      drinkLines += '  ' + dd.drinks[i].time + '  -  ' + (dd.drinks[i].type || 'Water') + ' ' + dd.drinks[i].oz + ' oz\n';
+    }
+    if (!drinkLines) { drinkLines = '  (none recorded)\n'; }
+    var peeLines = '';
+    var colorLabels = { clear: 'Clear', light: 'Light', normal: 'Normal', dark: 'Dark', urgent: 'Urgent', night: 'Night' };
+    for (var i = 0; i < dd.pees.length; i++) {
+      peeLines += '  ' + dd.pees[i].time + '  -  ' + (colorLabels[dd.pees[i].color] || dd.pees[i].color) + '\n';
+    }
+    if (!peeLines) { peeLines = '  (none recorded)\n'; }
+    var sleepNote = 'Not recorded';
+    if (dd.sleep) { sleepNote = (dd.sleep.voids < 0) ? 'Not recorded' : (dd.sleep.voids === 0) ? 'Slept through' : dd.sleep.voids + ' wake(s)'; }
+    var darkCount = 0; var urgCount = 0; var nightCount = 0;
+    for (var i = 0; i < dd.pees.length; i++) {
+      if (dd.pees[i].color === 'dark') { darkCount++; }
+      if (dd.pees[i].color === 'urgent') { urgCount++; }
+      if (dd.pees[i].color === 'night') { nightCount++; }
+    }
+    var flags = '';
+    if (darkCount >= 2) { flags += 'WARNING: Multiple dark urine events\n'; }
+    if (urgCount >= 2) { flags += 'WARNING: Multiple urgency events\n'; }
+    if (nightCount >= 1) { flags += 'WARNING: Nocturia - night voiding logged\n'; }
+    if (oz < goalOz * 0.5) { flags += 'WARNING: Low fluid intake (<50% of goal)\n'; }
+    if (!flags) { flags = 'No significant flags today\n'; }
+    r = line + '\n  FLOWLOG - DAILY REPORT\n  ' + new Date().toLocaleString() + '\n' + line + '\n\n';
+    r += 'DATE:     ' + date + '\n';
+    r += 'GOAL:     ' + settings.goal + ' drinks / ' + goalOz + ' oz\n';
+    r += 'BEDTIME:  ' + bed12 + '  |  Cutoff: ' + cutoff12 + '\n\n';
+    r += div + '\nINTAKE\n' + div + '\n';
+    r += 'Drinks:      ' + dd.drinks.length + ' of ' + settings.goal + '\n';
+    r += 'Total:       ' + oz + ' oz\nProgress:    ' + pct + '%\n\n' + drinkLines + '\n';
+    r += div + '\nOUTPUT\n' + div + '\n';
+    r += 'Events:      ' + dd.pees.length + '\nUrgent:      ' + urgCount + '\nNight voids: ' + nightCount + '\nDark urine:  ' + darkCount + '\n\n' + peeLines + '\n';
+    r += div + '\nSLEEP\n' + div + '\nNight waking: ' + sleepNote + '\n\n';
+    r += div + '\nCLINICAL FLAGS\n' + div + '\n' + flags;
+    r += '\n' + line + '\n  FlowLog - Personal Hydration Tracker\n' + line;
+  } else {
+    var days = [];
+    for (var i = 6; i >= 0; i--) { var dobj = new Date(); dobj.setDate(dobj.getDate() - i); days.push(dobj.toISOString().split('T')[0]); }
+    var wD = 0; var wP = 0; var wOz = 0; var sleepLogged = 0; var nocNights = 0;
+    var allP2 = [];
+    for (var i = 0; i < days.length; i++) {
+      var dd2 = state[days[i]] || { drinks: [], pees: [], sleep: null };
+      wD += dd2.drinks ? dd2.drinks.length : 0;
+      wP += dd2.pees ? dd2.pees.length : 0;
+      if (dd2.drinks) { for (var j = 0; j < dd2.drinks.length; j++) { wOz += dd2.drinks[j].oz; } }
+      if (dd2.pees) { for (var j = 0; j < dd2.pees.length; j++) { allP2.push(dd2.pees[j]); } }
+      if (dd2.sleep && dd2.sleep.voids >= 0) { sleepLogged++; if (dd2.sleep.voids > 0) { nocNights++; } }
+    }
+    var dayLines = '';
+    for (var i = 0; i < days.length; i++) {
+      var dd3 = state[days[i]] || { drinks: [], pees: [], sleep: null };
+      var dlbl = new Date(days[i] + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      var dc4 = dd3.drinks ? dd3.drinks.length : 0;
+      var doz = 0; if (dd3.drinks) { for (var j = 0; j < dd3.drinks.length; j++) { doz += dd3.drinks[j].oz; } }
+      var pc4 = dd3.pees ? dd3.pees.length : 0;
+      var slp = (dd3.sleep && dd3.sleep.voids >= 0) ? (dd3.sleep.voids === 0 ? 'Full' : dd3.sleep.voids + ' wake(s)') : '--';
+      dayLines += '  ' + dlbl + ' - ' + dc4 + ' drinks (' + doz + ' oz), ' + pc4 + ' voids, sleep: ' + slp + '\n';
+    }
+    var clr = 0; var lgt = 0; var nrm = 0; var drk = 0; var urg = 0; var ngt = 0;
+    for (var i = 0; i < allP2.length; i++) {
+      var c = allP2[i].color;
+      if (c === 'clear') { clr++; } else if (c === 'light') { lgt++; } else if (c === 'normal') { nrm++; }
+      else if (c === 'dark') { drk++; } else if (c === 'urgent') { urg++; } else if (c === 'night') { ngt++; }
+    }
+    var wFlags = '';
+    if (drk >= 5) { wFlags += 'WARNING: Frequent dark urine\n'; }
+    if (urg >= 5) { wFlags += 'WARNING: Frequent urgency events\n'; }
+    if (nocNights >= 3) { wFlags += 'WARNING: Nocturia on ' + nocNights + ' of ' + sleepLogged + ' nights\n'; }
+    if (wD / 7 < settings.goal * 0.5) { wFlags += 'WARNING: Consistently low fluid intake\n'; }
+    if (!wFlags) { wFlags = 'No significant patterns flagged\n'; }
+    r = line + '\n  FLOWLOG - WEEKLY REPORT\n  ' + new Date().toLocaleString() + '\n  Last 7 Days\n' + line + '\n\n';
+    r += 'BEDTIME: ' + bed12 + '  |  Cutoff: ' + cutoff12 + '\n\n';
+    r += div + '\nSUMMARY\n' + div + '\n';
+    r += 'Total Drinks:    ' + wD + ' (' + wOz + ' oz)\n';
+    r += 'Daily Avg:       ' + (wD / 7).toFixed(1) + ' drinks / ' + Math.round(wOz / 7) + ' oz\n';
+    r += 'Total Output:    ' + wP + ' events\n';
+    r += 'Nights Logged:   ' + sleepLogged + ' of 7\n';
+    r += 'Nocturia Nights: ' + nocNights + ' of ' + sleepLogged + '\n\n';
+    r += div + '\nDAILY BREAKDOWN\n' + div + '\n' + dayLines + '\n';
+    r += div + '\nURINE COLOR LOG\n' + div + '\n';
+    r += 'Clear: ' + clr + '  Light: ' + lgt + '  Normal: ' + nrm + '\n';
+    r += 'Dark: ' + drk + '  Urgent: ' + urg + '  Night: ' + ngt + '\n\n';
+    r += div + '\nCLINICAL FLAGS\n' + div + '\n' + wFlags;
+    r += '\n' + line + '\n  FlowLog - Personal Hydration Tracker\n' + line;
+  }
+  reportText = r;
+  var pre = document.getElementById('reportPre');
+  pre.textContent = r;
+  pre.classList.add('show');
+}
+
+function copyReport() {
+  if (!reportText) { showToast('Generate a report first'); return; }
+  navigator.clipboard.writeText(reportText).then(function() { showToast('Copied!'); });
+}
+
+function dlReport() {
+  if (!reportText) { showToast('Generate a report first'); return; }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([reportText], { type: 'text/plain' }));
+  a.download = 'flowlog-' + todayStr() + '.txt';
+  a.click();
+  showToast('Report saved');
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────────────
+function showTab(id) {
+  var tabs = ['trends', 'insights', 'report'];
+  for (var i = 0; i < tabs.length; i++) {
+    document.getElementById('tab-' + tabs[i]).style.display = (tabs[i] === id) ? 'block' : 'none';
+  }
+  qsEach('.tab', function(b, i) {
+    b.classList.toggle('active', tabs[i] === id);
+  });
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+load();
+qsEach('.goal-opt', function(b) {
+  if (parseInt(b.getAttribute('data-val')) === settings.goal) { b.classList.add('selected'); }
+});
+qsEach('.oz-opt', function(b) {
+  if (parseInt(b.getAttribute('data-val')) === settings.oz) { b.classList.add('selected'); }
+});
+tempGoal = settings.goal;
+tempOz = settings.oz;
+tempBedtime = settings.bedtime || '21:30';
+
+setInterval(function() { updateCutoffBanner(); }, 60000);
+renderCheckin();
+render();
+
+</script>
+
+</body>
+</html>
